@@ -366,3 +366,4 @@ If presenting this project:
    - Watch the instant notification and accept the request in Window 1.
    - Show the seat counter decrementing and the booking updating to `ACCEPTED` in Window 2.
 3. **Show Admin Moderation**: Log in as `admin@campusride.com` to demonstrate platform supervision and review reports.
+
