@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discover Rides - CampusRide</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="site-nav" id="main-nav"></header>
+
+  <main class="container" style="padding-top: 2.5rem; padding-bottom: 4rem;">
+    <!-- Page Header -->
+    <div style="margin-bottom: 2rem;">
+      <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--dark); margin-bottom: 0.35rem;">Find a Student Ride</h1>
+      <p style="color: var(--slate-500); font-size: 1rem;">Search available seats across colleges, filter by route, vehicle type, and departure time.</p>
+    </div>
+
+    <!-- Filter Bar Card -->
+    <div class="card" style="margin-bottom: 2rem; padding: 1.5rem;">
+      <form id="filter-rides-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: flex-end;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Pickup Point</label>
+          <input type="text" id="filter-source" class="form-input" placeholder="e.g. Uppal, LB Nagar" list="filter-sources-list" autocomplete="off">
+          <datalist id="filter-sources-list">
+            <option value="Uppal Metro Station">
+            <option value="LB Nagar Ring Road">
+            <option value="Secunderabad Railway Station">
+            <option value="Dilsukhnagar">
+            <option value="KPHB Colony">
+            <option value="Mehdipatnam">
+            <option value="Tarnaka">
+            <option value="Nagole Metro Station">
+            <option value="Ghatkesar Town">
+          </datalist>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Destination</label>
+          <input type="text" id="filter-destination" class="form-input" placeholder="e.g. Anurag University" list="filter-destinations-list" autocomplete="off">
+          <datalist id="filter-destinations-list">
+            <option value="Anurag University, Ghatkesar">
+            <option value="Osmania University Campus">
+            <option value="JNTU Hyderabad">
+            <option value="CBIT Gandipet">
+            <option value="VNR VJIET">
+            <option value="GRIET Bachupally">
+            <option value="CVR College of Engineering">
+          </datalist>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Travel Date</label>
+          <input type="date" id="filter-date" class="form-input">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Vehicle Type</label>
+          <select id="filter-vehicle" class="form-select">
+            <option value="">All Vehicles</option>
+            <option value="Bike">Bike (1 seat)</option>
+            <option value="Car">Car</option>
+            <option value="Auto">Auto</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Max Fare (₹)</label>
+          <input type="number" id="filter-max-fare" class="form-input" placeholder="e.g. 100" min="0">
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">Filter</button>
+          <button type="button" id="reset-filter-btn" class="btn btn-secondary" title="Reset Filters">Reset</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Results Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <div id="results-count-text" style="font-weight: 600; color: var(--slate-600);">
+        Searching available rides...
+      </div>
+      <div>
+        <a href="offer-ride.html" class="btn btn-outline btn-sm">➕ Offer Your Own Ride</a>
+      </div>
+    </div>
+
+    <!-- Rides Card Grid -->
+    <div id="rides-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
+      <div class="card" style="text-align: center; padding: 3rem; grid-column: 1 / -1;">
+        <p>Fetching rides from database...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Seat Request Modal -->
+  <div id="request-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-ride-title">Request a Seat</h3>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+      <form id="modal-request-form">
+        <div class="modal-body">
+          <input type="hidden" id="modal-ride-id">
+          
+          <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 0.85rem; margin-bottom: 1rem;">
+            <div id="modal-route-summary" style="font-weight: 700; color: var(--slate-800);"></div>
+            <div id="modal-time-summary" style="font-size: 0.85rem; color: var(--slate-500); margin-top: 0.25rem;"></div>
+            <div id="modal-fare-summary" style="font-size: 0.95rem; font-weight: 800; color: var(--primary); margin-top: 0.25rem;"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modal-seats">Seats Needed <span class="required">*</span></label>
+            <input type="number" id="modal-seats" class="form-input" min="1" max="4" value="1" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modal-pickup">Your Exact Pickup Location</label>
+            <input type="text" id="modal-pickup" class="form-input" placeholder="e.g. Near Pillar 14, Uppal Metro Station">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modal-notes">Note for Driver (Optional)</label>
+            <textarea id="modal-notes" class="form-textarea" rows="2" placeholder="e.g. Carrying a backpack. Will be there 5 mins before time."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+          <button type="submit" id="modal-submit-btn" class="btn btn-primary">Send Seat Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer" id="main-footer"></footer>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      UI.initNavbar("rides");
+      UI.initFooter();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const sourceInput = document.getElementById("filter-source");
+      const destInput = document.getElementById("filter-destination");
+      const dateInput = document.getElementById("filter-date");
+      const vehicleSelect = document.getElementById("filter-vehicle");
+      const fareInput = document.getElementById("filter-max-fare");
+
+      // Initialize filter values from URL if present
+      if (urlParams.get("source")) sourceInput.value = urlParams.get("source");
+      if (urlParams.get("destination")) destInput.value = urlParams.get("destination");
+      if (urlParams.get("date")) dateInput.value = urlParams.get("date");
+      if (urlParams.get("vehicle_type")) vehicleSelect.value = urlParams.get("vehicle_type");
+      if (urlParams.get("max_fare")) fareInput.value = urlParams.get("max_fare");
+
+      // Load and display rides
+      async function fetchAndRenderRides() {
+        const grid = document.getElementById("rides-grid");
+        const countText = document.getElementById("results-count-text");
+        grid.innerHTML = `<div class="card" style="text-align: center; padding: 3rem; grid-column: 1 / -1;"><p>Searching database...</p></div>`;
+
+        const params = {};
+        if (sourceInput.value.trim()) params.source = sourceInput.value.trim();
+        if (destInput.value.trim()) params.destination = destInput.value.trim();
+        if (dateInput.value) params.date = dateInput.value;
+        if (vehicleSelect.value) params.vehicle_type = vehicleSelect.value;
+        if (fareInput.value) params.max_fare = fareInput.value;
+
+        try {
+          const res = await API.get("/rides", params);
+          if (res.success) {
+            const rides = res.rides || [];
+            countText.textContent = `Showing ${rides.length} active ride${rides.length === 1 ? '' : 's'}`;
+
+            if (rides.length === 0) {
+              grid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                  <div class="empty-icon">🚗</div>
+                  <h3 class="empty-title">No rides match your criteria</h3>
+                  <p class="empty-desc">Try clearing your filters or offering a ride for other students travelling your route.</p>
+                  <a href="offer-ride.html" class="btn btn-primary">Offer This Ride Route</a>
+                </div>
+              `;
+              return;
+            }
+
+            const currentUser = Auth.getUser();
+
+            grid.innerHTML = rides.map(r => {
+              const isOwner = currentUser && currentUser.id === r.driver_id;
+              return `
+                <div class="ride-card">
+                  <div class="ride-card-top">
+                    <div class="ride-route">
+                      <div class="route-stop">
+                        <span class="route-label">From</span>
+                        <span class="route-point">${r.source}</span>
+                      </div>
+                      <div class="route-stop destination">
+                        <span class="route-label">To</span>
+                        <span class="route-point">${r.destination}</span>
+                      </div>
+                    </div>
+                    ${UI.getVehicleBadge(r.vehicle_type)}
+                  </div>
+
+                  <div class="ride-meta-grid">
+                    <div class="meta-item">
+                      <span class="meta-label">Date</span>
+                      <span class="meta-value">${UI.formatDate(r.travel_date)}</span>
+                    </div>
+                    <div class="meta-item">
+                      <span class="meta-label">Time</span>
+                      <span class="meta-value">${UI.formatTime(r.departure_time)}</span>
+                    </div>
+                    <div class="meta-item">
+                      <span class="meta-label">Seats</span>
+                      <span class="meta-value">${r.available_seats} / ${r.total_seats}</span>
+                    </div>
+                  </div>
+
+                  ${r.vehicle_details ? `
+                    <div style="font-size: 0.8rem; color: var(--slate-600); background: var(--slate-50); padding: 0.4rem 0.6rem; border-radius: var(--radius-sm);">
+                      🚙 <strong>Vehicle:</strong> ${r.vehicle_details}
+                    </div>
+                  ` : ''}
+
+                  <div class="ride-driver-row">
+                    <div class="driver-info">
+                      <div class="driver-avatar">${r.driver_name ? r.driver_name.charAt(0).toUpperCase() : 'U'}</div>
+                      <div>
+                        <div class="driver-name">${r.driver_name}</div>
+                        <div class="driver-college">${r.driver_college || 'Student'}</div>
+                        <div class="driver-rating">★ ${r.driver_avg_rating} (${r.driver_rating_count || 0})</div>
+                      </div>
+                    </div>
+                    <div class="ride-price-badge">
+                      <div class="ride-price">${UI.formatCurrency(r.fare)}</div>
+                      <div class="ride-seats-tag">per passenger</div>
+                    </div>
+                  </div>
+
+                  <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                    <a href="ride-details.html?id=${r.id}" class="btn btn-secondary" style="flex: 1;">
+                      Details
+                    </a>
+                    ${isOwner ? `
+                      <span class="badge badge-neutral" style="align-self: center; height: 38px; display: flex; align-items: center;">Your Ride</span>
+                    ` : `
+                      <button class="btn btn-primary open-request-modal-btn" 
+                        data-id="${r.id}" 
+                        data-source="${r.source}" 
+                        data-dest="${r.destination}" 
+                        data-fare="${r.fare}" 
+                        data-date="${r.travel_date}" 
+                        data-time="${r.departure_time}" 
+                        data-seats="${r.available_seats}"
+                        style="flex: 2;">
+                        Request Seat
+                      </button>
+                    `}
+                  </div>
+                </div>
+              `;
+            }).join("");
+
+            attachModalEvents();
+          }
+        } catch (err) {
+          grid.innerHTML = `
+            <div class="card" style="text-align: center; padding: 3rem; grid-column: 1 / -1;">
+              <p style="color: var(--danger);">Failed to load rides. Please check server connection.</p>
+            </div>
+          `;
+        }
+      }
+
+      // Filter form submission
+      document.getElementById("filter-rides-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        fetchAndRenderRides();
+      });
+
+      // Reset filters
+      document.getElementById("reset-filter-btn").addEventListener("click", () => {
+        sourceInput.value = "";
+        destInput.value = "";
+        dateInput.value = "";
+        vehicleSelect.value = "";
+        fareInput.value = "";
+        fetchAndRenderRides();
+      });
+
+      // Modal handling
+      const modal = document.getElementById("request-modal");
+      const modalCloseBtn = document.getElementById("modal-close-btn");
+      const modalCancelBtn = document.getElementById("modal-cancel-btn");
+      const modalForm = document.getElementById("modal-request-form");
+      const modalSubmitBtn = document.getElementById("modal-submit-btn");
+
+      function closeModal() {
+        modal.style.display = "none";
+      }
+
+      modalCloseBtn.addEventListener("click", closeModal);
+      modalCancelBtn.addEventListener("click", closeModal);
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      function attachModalEvents() {
+        document.querySelectorAll(".open-request-modal-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            if (!Auth.isLoggedIn()) {
+              UI.showToast("Please log in to request a seat.", "warning");
+              setTimeout(() => {
+                window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
+              }, 1200);
+              return;
+            }
+
+            const id = btn.dataset.id;
+            const source = btn.dataset.source;
+            const dest = btn.dataset.dest;
+            const fare = btn.dataset.fare;
+            const date = btn.dataset.date;
+            const time = btn.dataset.time;
+            const availSeats = parseInt(btn.dataset.seats);
+
+            document.getElementById("modal-ride-id").value = id;
+            document.getElementById("modal-route-summary").textContent = `${source} ➔ ${dest}`;
+            document.getElementById("modal-time-summary").textContent = `📅 ${UI.formatDate(date)} at ${UI.formatTime(time)}`;
+            document.getElementById("modal-fare-summary").textContent = `Fare: ${UI.formatCurrency(fare)} per seat (${availSeats} seats left)`;
+
+            const seatsInput = document.getElementById("modal-seats");
+            seatsInput.max = availSeats;
+            seatsInput.value = 1;
+
+            modal.style.display = "flex";
+          });
+        });
+      }
+
+      // Modal Form Submit (Seat Request)
+      modalForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const ride_id = document.getElementById("modal-ride-id").value;
+        const seats_requested = parseInt(document.getElementById("modal-seats").value);
+        const pickup_point = document.getElementById("modal-pickup").value.trim();
+        const notes = document.getElementById("modal-notes").value.trim();
+
+        modalSubmitBtn.disabled = true;
+        modalSubmitBtn.textContent = "Sending Request...";
+
+        try {
+          const res = await API.post("/requests", {
+            ride_id,
+            seats_requested,
+            pickup_point,
+            notes
+          });
+
+          if (res.success) {
+            closeModal();
+            UI.showToast("Seat request sent successfully! Driver notified.", "success");
+            setTimeout(() => {
+              window.location.href = "my-rides.html?tab=requests";
+            }, 1200);
+          }
+        } catch (err) {
+          UI.showToast(err.message || "Failed to submit seat request.", "error");
+          modalSubmitBtn.disabled = false;
+          modalSubmitBtn.textContent = "Send Seat Request";
+        }
+      });
+
+      // Initial Fetch
+      fetchAndRenderRides();
+    });
+  </script>
+</body>
+</html>

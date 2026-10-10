@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusRide - Multi-College Student Ride & Seat Sharing</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="site-nav" id="main-nav"></header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container hero-content">
+      <div class="hero-pill">
+        <span>🎓</span> Smart Student Commute Network
+      </div>
+      <h1 class="hero-title">
+        Share Rides, Split Costs, <br>
+        <span class="hero-highlight">Arrive on Time Together</span>
+      </h1>
+      <p class="hero-subtitle">
+        CampusRide connects students heading in the same direction. Offer extra seats on your bike or car, or book an affordable ride to your college today.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="#search-section" class="btn btn-primary btn-lg">🔍 Find a Ride</a>
+        <a href="offer-ride.html" class="btn btn-secondary btn-lg">➕ Offer Available Seats</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Ride Search Card (Overlapping Hero) -->
+  <section class="container" id="search-section">
+    <div class="search-card">
+      <form id="hero-search-form" class="search-form-grid">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Starting Point</label>
+          <div class="input-icon-wrapper">
+            <span class="input-icon">📍</span>
+            <input type="text" id="search-source" class="form-input" placeholder="e.g. Uppal, LB Nagar, Secunderabad" list="common-sources">
+            <datalist id="common-sources">
+              <option value="Uppal Metro Station">
+              <option value="LB Nagar Ring Road">
+              <option value="Secunderabad Railway Station">
+              <option value="KPHB Colony">
+              <option value="Dilsukhnagar">
+              <option value="Mehdipatnam">
+              <option value="Ghatkesar">
+            </datalist>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Destination College</label>
+          <div class="input-icon-wrapper">
+            <span class="input-icon">🎓</span>
+            <input type="text" id="search-dest" class="form-input" placeholder="e.g. Anurag University, Osmania, JNTU" list="common-colleges">
+            <datalist id="common-colleges">
+              <option value="Anurag University, Ghatkesar">
+              <option value="Osmania University Campus">
+              <option value="JNTU Hyderabad">
+              <option value="CBIT Gandipet">
+              <option value="VNR VJIET">
+              <option value="Gokaraju Rangaraju">
+            </datalist>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Travel Date</label>
+          <input type="date" id="search-date" class="form-input">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Vehicle</label>
+          <select id="search-vehicle" class="form-select">
+            <option value="">Any Vehicle</option>
+            <option value="Bike">Bike (1 seat)</option>
+            <option value="Car">Car (Up to 4 seats)</option>
+            <option value="Auto">Auto (Up to 3 seats)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="height: 44px; padding: 0 1.5rem;">
+          Search Rides
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Live Featured Rides -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Active Rides</div>
+        <h2 class="section-title">Popular Upcoming Student Rides</h2>
+        <p class="section-subtitle">Real-time carpools and bike-pools offered by students across universities.</p>
+      </div>
+
+      <div id="featured-rides-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+        <div class="card" style="text-align: center; padding: 2rem; grid-column: 1 / -1;">
+          <p>Loading real-time available rides...</p>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 2.5rem;">
+        <a href="rides.html" class="btn btn-secondary btn-lg">Explore All Available Rides &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="section section-alt" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Simple Process</div>
+        <h2 class="section-title">How CampusRide Works</h2>
+        <p class="section-subtitle">Get connected with peers in three hassle-free steps.</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">01</div>
+          <div class="step-icon">🔍</div>
+          <h3 class="step-title">Search or Post a Route</h3>
+          <p class="step-desc">Enter your pickup point, your destination campus, and preferred time. Both drivers and passengers can post their schedule.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">02</div>
+          <div class="step-icon">🤝</div>
+          <h3 class="step-title">Request & Confirm</h3>
+          <p class="step-desc">Send a seat reservation request. The student driver reviews your profile and confirms your seat with instant updates.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">03</div>
+          <div class="step-icon">🚀</div>
+          <h3 class="step-title">Ride & Split Costs</h3>
+          <p class="step-desc">Meet at the designated spot, travel together safely, share fuel expenses easily, and leave mutual ratings.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Safety & Trust Section -->
+  <section class="section" id="safety">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Student Safety First</div>
+        <h2 class="section-title">Built Exclusively For Campus Security</h2>
+        <p class="section-subtitle">Every feature is designed to keep our student community safe, reliable, and friendly.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-box">
+          <div class="feature-icon-box">🛡️</div>
+          <div class="feature-info">
+            <h3>Verified Campus Accounts</h3>
+            <p>Riders and drivers register with real names and collegiate affiliations, keeping rides transparent.</p>
+          </div>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon-box">⭐</div>
+          <div class="feature-info">
+            <h3>Two-Way Rating System</h3>
+            <p>Every completed ride can be reviewed by both driver and passenger to maintain mutual respect.</p>
+          </div>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon-box">🔒</div>
+          <div class="feature-info">
+            <h3>Driver Seat Control</h3>
+            <p>Drivers have full authority to accept or decline requests before any seat is reserved.</p>
+          </div>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon-box">💰</div>
+          <div class="feature-info">
+            <h3>Transparent Low Fares</h3>
+            <p>Save up to 70% compared to private autos and cabs by sharing travel expenses equally.</p>
+          </div>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon-box">🔔</div>
+          <div class="feature-info">
+            <h3>Live Instant Notifications</h3>
+            <p>Receive immediate alerts for booking confirmations, schedule adjustments, or cancellations.</p>
+          </div>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon-box">🌱</div>
+          <div class="feature-info">
+            <h3>Eco-Friendly Commuting</h3>
+            <p>Cut traffic congestion and reduce campus carbon footprint by filling empty vehicle seats.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action Banner -->
+  <section class="section" style="background: linear-gradient(135deg, #4F46E5 0%, #312E81 100%); color: white; text-align: center;">
+    <div class="container">
+      <h2 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 1rem;">Ready to upgrade your daily commute?</h2>
+      <p style="font-size: 1.1rem; color: #E0E7FF; max-width: 600px; margin: 0 auto 2rem;">
+        Join hundreds of students travelling to Anurag University and other campuses across the city.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="register.html" class="btn btn-secondary btn-lg">Create Free Student Account</a>
+        <a href="rides.html" class="btn btn-outline btn-lg" style="color: white; border-color: white;">Browse Rides</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer" id="main-footer"></footer>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      UI.initNavbar("home");
+      UI.initFooter();
+
+      // Set min date to today for search
+      const dateInput = document.getElementById("search-date");
+      if (dateInput) {
+        dateInput.min = new Date().toISOString().split("T")[0];
+      }
+
+      // Handle search form submission
+      const searchForm = document.getElementById("hero-search-form");
+      if (searchForm) {
+        searchForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const source = document.getElementById("search-source").value.trim();
+          const destination = document.getElementById("search-dest").value.trim();
+          const date = document.getElementById("search-date").value;
+          const vehicle = document.getElementById("search-vehicle").value;
+
+          const params = new URLSearchParams();
+          if (source) params.append("source", source);
+          if (destination) params.append("destination", destination);
+          if (date) params.append("date", date);
+          if (vehicle) params.append("vehicle_type", vehicle);
+
+          window.location.href = `rides.html?${params.toString()}`;
+        });
+      }
+
+      // Load Featured Rides from real database
+      const ridesContainer = document.getElementById("featured-rides-grid");
+      try {
+        const res = await API.get("/rides");
+        if (res.success && res.rides && res.rides.length > 0) {
+          const featured = res.rides.slice(0, 3);
+          ridesContainer.innerHTML = featured.map(r => `
+            <div class="ride-card">
+              <div class="ride-card-top">
+                <div class="ride-route">
+                  <div class="route-stop">
+                    <span class="route-label">From</span>
+                    <span class="route-point">${r.source}</span>
+                  </div>
+                  <div class="route-stop destination">
+                    <span class="route-label">To</span>
+                    <span class="route-point">${r.destination}</span>
+                  </div>
+                </div>
+                ${UI.getVehicleBadge(r.vehicle_type)}
+              </div>
+
+              <div class="ride-meta-grid">
+                <div class="meta-item">
+                  <span class="meta-label">Date</span>
+                  <span class="meta-value">${UI.formatDate(r.travel_date)}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">Time</span>
+                  <span class="meta-value">${UI.formatTime(r.departure_time)}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">Available</span>
+                  <span class="meta-value">${r.available_seats} / ${r.total_seats} seat${r.total_seats > 1 ? 's' : ''}</span>
+                </div>
+              </div>
+
+              <div class="ride-driver-row">
+                <div class="driver-info">
+                  <div class="driver-avatar">${r.driver_name ? r.driver_name.charAt(0).toUpperCase() : 'U'}</div>
+                  <div>
+                    <div class="driver-name">${r.driver_name}</div>
+                    <div class="driver-college">${r.driver_college || 'Student'}</div>
+                  </div>
+                </div>
+                <div class="ride-price-badge">
+                  <div class="ride-price">${UI.formatCurrency(r.fare)}</div>
+                  <div class="ride-seats-tag">per seat</div>
+                </div>
+              </div>
+
+              <a href="ride-details.html?id=${r.id}" class="btn btn-outline btn-block" style="margin-top: 0.5rem;">
+                View Details & Request Seat
+              </a>
+            </div>
+          `).join("");
+        } else {
+          ridesContainer.innerHTML = `
+            <div class="card" style="text-align: center; padding: 2.5rem; grid-column: 1 / -1;">
+              <p style="font-size: 1.1rem; color: var(--slate-600); margin-bottom: 1rem;">No rides currently scheduled. Be the first to offer one!</p>
+              <a href="offer-ride.html" class="btn btn-primary">Offer a Ride Now</a>
+            </div>
+          `;
+        }
+      } catch (e) {
+        ridesContainer.innerHTML = `
+          <div class="card" style="text-align: center; padding: 2.5rem; grid-column: 1 / -1;">
+            <p style="color: var(--slate-600); margin-bottom: 1rem;">Unable to load featured rides right now.</p>
+            <a href="rides.html" class="btn btn-secondary">Browse Ride Search</a>
+          </div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

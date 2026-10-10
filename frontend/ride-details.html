@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ride Details - CampusRide</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="site-nav" id="main-nav"></header>
+
+  <main class="container" style="max-width: 900px; padding-top: 2.5rem; padding-bottom: 4rem;">
+    <!-- Breadcrumb / Back Link -->
+    <div style="margin-bottom: 1.5rem;">
+      <a href="rides.html" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600; color: var(--slate-600);">
+        &larr; Back to all rides
+      </a>
+    </div>
+
+    <!-- Main Ride Card -->
+    <div class="card" id="ride-details-card" style="padding: 2.25rem; margin-bottom: 2rem;">
+      <p style="text-align: center; color: var(--slate-500);">Loading ride details from database...</p>
+    </div>
+
+    <!-- Conditional Section: Driver Request Management or Passenger Request Area -->
+    <div id="dynamic-action-section"></div>
+
+  </main>
+
+  <!-- Report Ride Modal -->
+  <div id="report-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Report Ride Listing</h3>
+        <button class="modal-close" onclick="document.getElementById('report-modal').style.display='none'">&times;</button>
+      </div>
+      <form id="report-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Reason <span class="required">*</span></label>
+            <select id="report-reason" class="form-select" required>
+              <option value="">Select reason...</option>
+              <option value="Incorrect Route / Time">Incorrect Route or Time</option>
+              <option value="Excessive Fare">Unreasonable or Excessive Fare</option>
+              <option value="Fake or Inappropriate Listing">Suspicious or Inappropriate Listing</option>
+              <option value="Unsafe Driver Behavior">Safety Concern</option>
+              <option value="Other">Other Violation</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Additional Details</label>
+            <textarea id="report-details" class="form-textarea" rows="3" placeholder="Explain the issue for admin review..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('report-modal').style.display='none'">Cancel</button>
+          <button type="submit" class="btn btn-danger">Submit Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer" id="main-footer"></footer>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      UI.initNavbar("rides");
+      UI.initFooter();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const rideId = urlParams.get("id");
+
+      if (!rideId) {
+        window.location.href = "rides.html";
+        return;
+      }
+
+      await loadRideDetails(rideId);
+    });
+
+    async function loadRideDetails(rideId) {
+      const card = document.getElementById("ride-details-card");
+      const actionSection = document.getElementById("dynamic-action-section");
+
+      try {
+        const res = await API.get(`/rides/${rideId}`);
+        if (!res.success || !res.ride) {
+          card.innerHTML = `<p style="color: var(--danger); text-align: center;">Ride not found.</p>`;
+          return;
+        }
+
+        const r = res.ride;
+        const currentUser = Auth.getUser();
+        const isOwner = currentUser && currentUser.id === r.driver_id;
+        const isCompleted = r.status === "COMPLETED";
+        const isCancelled = r.status === "CANCELLED";
+
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+              <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                ${UI.getVehicleBadge(r.vehicle_type)}
+                ${UI.getStatusBadge(r.status)}
+              </div>
+              <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--dark);">
+                ${r.source} ➔ ${r.destination}
+              </h1>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">${UI.formatCurrency(r.fare)}</div>
+              <div style="font-size: 0.8rem; color: var(--slate-500); font-weight: 600;">per passenger seat</div>
+            </div>
+          </div>
+
+          <div class="ride-meta-grid" style="margin-bottom: 1.5rem;">
+            <div class="meta-item">
+              <span class="meta-label">Travel Date</span>
+              <span class="meta-value">${UI.formatDate(r.travel_date)}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Departure Time</span>
+              <span class="meta-value">${UI.formatTime(r.departure_time)}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Available Seats</span>
+              <span class="meta-value">${r.available_seats} of ${r.total_seats} remaining</span>
+            </div>
+          </div>
+
+          ${r.vehicle_details ? `
+            <div style="background: var(--slate-50); border: 1px solid var(--slate-200); padding: 0.85rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; font-size: 0.95rem;">
+              🚙 <strong>Vehicle Details:</strong> ${r.vehicle_details}
+            </div>
+          ` : ''}
+
+          ${r.notes ? `
+            <div style="background: #F8FAFC; border-left: 4px solid var(--primary); padding: 0.85rem 1rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin-bottom: 1.5rem;">
+              <div style="font-size: 0.8rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase; margin-bottom: 0.25rem;">Driver Notes</div>
+              <p style="font-size: 0.95rem; color: var(--slate-700);">${r.notes}</p>
+            </div>
+          ` : ''}
+
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-200); padding-top: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+              <div class="avatar-circle" style="width: 2.75rem; height: 2.75rem; font-size: 1.1rem;">
+                ${r.driver_name ? r.driver_name.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <div>
+                <div style="font-weight: 700; font-size: 1.05rem; color: var(--slate-800);">${r.driver_name}</div>
+                <div style="font-size: 0.85rem; color: var(--slate-500);">${r.driver_college || 'Student'}</div>
+                <div style="font-size: 0.85rem; color: #D97706; font-weight: 700;">★ ${r.driver_avg_rating} (${r.driver_rating_count || 0} reviews)</div>
+              </div>
+            </div>
+
+            <div>
+              ${!isOwner ? `
+                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('report-modal').style.display='flex'">
+                  🚩 Report Listing
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+
+        // Render Action Section
+        if (isOwner) {
+          await renderDriverControls(r, actionSection);
+        } else {
+          renderPassengerControls(r, currentUser, actionSection);
+        }
+
+      } catch (e) {
+        console.error("Load ride error:", e);
+        card.innerHTML = `<p style="color: var(--danger); text-align: center;">Error loading ride.</p>`;
+      }
+    }
+
+    // Controls for the ride driver (view requests, accept/reject, complete, cancel)
+    async function renderDriverControls(ride, container) {
+      let requestsHtml = `<div class="card" style="padding: 1.5rem; text-align: center;"><p>Loading requests received...</p></div>`;
+      container.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 style="font-size: 1.35rem; font-weight: 800;">⚙️ Driver Management Panel</h2>
+          <div style="display: flex; gap: 0.5rem;">
+            ${ride.status === 'OPEN' || ride.status === 'FULL' ? `
+              <button class="btn btn-success btn-sm" id="btn-complete-ride">Mark as Completed</button>
+              <button class="btn btn-danger btn-sm" id="btn-cancel-ride">Cancel Ride</button>
+            ` : ''}
+          </div>
+        </div>
+        <div id="driver-requests-list"></div>
+      `;
+
+      // Cancel button event
+      const cancelBtn = document.getElementById("btn-cancel-ride");
+      if (cancelBtn) {
+        cancelBtn.addEventListener("click", async () => {
+          const confirmed = await UI.showConfirm({
+            title: "Cancel This Ride?",
+            message: "All pending and confirmed passengers will be notified immediately.",
+            confirmText: "Yes, Cancel Ride",
+            isDanger: true
+          });
+          if (confirmed) {
+            try {
+              const res = await API.patch(`/rides/${ride.id}/cancel`);
+              if (res.success) {
+                UI.showToast("Ride cancelled successfully.", "info");
+                loadRideDetails(ride.id);
+              }
+            } catch (e) {
+              UI.showToast(e.message || "Failed to cancel ride.", "error");
+            }
+          }
+        });
+      }
+
+      // Complete button event
+      const completeBtn = document.getElementById("btn-complete-ride");
+      if (completeBtn) {
+        completeBtn.addEventListener("click", async () => {
+          const confirmed = await UI.showConfirm({
+            title: "Mark Ride as Completed?",
+            message: "This will finalize the ride and enable participant ratings.",
+            confirmText: "Yes, Complete Ride"
+          });
+          if (confirmed) {
+            try {
+              const res = await API.patch(`/rides/${ride.id}/complete`);
+              if (res.success) {
+                UI.showToast("Ride marked as completed!", "success");
+                loadRideDetails(ride.id);
+              }
+            } catch (e) {
+              UI.showToast(e.message || "Failed to complete ride.", "error");
+            }
+          }
+        });
+      }
+
+      // Fetch requests for this ride
+      const requestsListDiv = document.getElementById("driver-requests-list");
+      try {
+        const reqRes = await API.get(`/requests/ride/${ride.id}`);
+        if (reqRes.success && reqRes.requests && reqRes.requests.length > 0) {
+          requestsListDiv.innerHTML = `
+            <div class="card" style="padding: 1.5rem;">
+              <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">
+                Seat Requests (${reqRes.requests.length})
+              </h3>
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${reqRes.requests.map(req => `
+                  <div style="border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <strong>${req.passenger_name}</strong>
+                        ${UI.getStatusBadge(req.status)}
+                        <span style="font-size: 0.8rem; color: #D97706; font-weight: 700;">★ ${req.passenger_avg_rating}</span>
+                      </div>
+                      <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 0.25rem;">
+                        College: ${req.passenger_college || 'Student'} &bull; Requested: <strong>${req.seats_requested} seat(s)</strong>
+                      </div>
+                      ${req.pickup_point ? `
+                        <div style="font-size: 0.85rem; color: var(--slate-700); margin-top: 0.2rem;">
+                          📍 Pickup Point: <em>${req.pickup_point}</em>
+                        </div>
+                      ` : ''}
+                      ${req.notes ? `
+                        <div style="font-size: 0.85rem; color: var(--slate-600); margin-top: 0.2rem;">
+                          💬 Note: "${req.notes}"
+                        </div>
+                      ` : ''}
+                      ${req.status === 'ACCEPTED' ? `
+                        <div style="font-size: 0.85rem; color: #065F46; font-weight: 700; margin-top: 0.35rem;">
+                          📞 Passenger Phone: ${req.passenger_phone || 'Not shared'}
+                        </div>
+                      ` : ''}
+                    </div>
+
+                    ${req.status === 'PENDING' ? `
+                      <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-success btn-sm btn-accept-req" data-id="${req.id}">
+                          ✓ Accept Request
+                        </button>
+                        <button class="btn btn-danger btn-sm btn-reject-req" data-id="${req.id}">
+                          ✕ Reject
+                        </button>
+                      </div>
+                    ` : ''}
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          `;
+
+          // Attach accept/reject listeners
+          document.querySelectorAll(".btn-accept-req").forEach(b => {
+            b.addEventListener("click", async () => {
+              const reqId = b.dataset.id;
+              b.disabled = true;
+              try {
+                const actRes = await API.patch(`/requests/${reqId}/accept`);
+                if (actRes.success) {
+                  UI.showToast("Request accepted! Available seats updated.", "success");
+                  loadRideDetails(ride.id);
+                }
+              } catch (e) {
+                UI.showToast(e.message || "Failed to accept request.", "error");
+                b.disabled = false;
+              }
+            });
+          });
+
+          document.querySelectorAll(".btn-reject-req").forEach(b => {
+            b.addEventListener("click", async () => {
+              const reqId = b.dataset.id;
+              b.disabled = true;
+              try {
+                const actRes = await API.patch(`/requests/${reqId}/reject`);
+                if (actRes.success) {
+                  UI.showToast("Request declined.", "info");
+                  loadRideDetails(ride.id);
+                }
+              } catch (e) {
+                UI.showToast(e.message || "Failed to decline request.", "error");
+                b.disabled = false;
+              }
+            });
+          });
+
+        } else {
+          requestsListDiv.innerHTML = `
+            <div class="card" style="text-align: center; padding: 2rem;">
+              <p style="color: var(--slate-500);">No passenger requests received yet for this ride.</p>
+            </div>
+          `;
+        }
+      } catch (e) {
+        requestsListDiv.innerHTML = `<p style="color: var(--danger);">Failed to load requests.</p>`;
+      }
+    }
+
+    // Controls for Passengers
+    function renderPassengerControls(ride, currentUser, container) {
+      if (!currentUser) {
+        container.innerHTML = `
+          <div class="card" style="text-align: center; padding: 2.5rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Want to reserve a seat?</h3>
+            <p style="color: var(--slate-600); margin-bottom: 1.5rem;">Log in with your student account to request seats on this ride.</p>
+            <a href="login.html?redirect=${encodeURIComponent(window.location.href)}" class="btn btn-primary btn-lg">Log In to Request Seat</a>
+          </div>
+        `;
+        return;
+      }
+
+      // Check existing user request
+      const req = ride.userRequest;
+
+      if (req) {
+        // Passenger already sent a request
+        let statusBox = "";
+        if (req.status === "PENDING") {
+          statusBox = `
+            <div class="card" style="padding: 1.75rem; border-left: 5px solid var(--warning);">
+              <h3 style="font-size: 1.2rem; font-weight: 700; color: #92400E; margin-bottom: 0.5rem;">
+                ⏳ Seat Request Pending
+              </h3>
+              <p style="color: var(--slate-600); margin-bottom: 1rem;">
+                You requested <strong>${req.seats_requested} seat(s)</strong>. The driver has been notified and will review your request shortly.
+              </p>
+              <button class="btn btn-danger btn-sm" id="btn-cancel-my-request" data-id="${req.id}">
+                Cancel My Request
+              </button>
+            </div>
+          `;
+        } else if (req.status === "ACCEPTED") {
+          statusBox = `
+            <div class="card" style="padding: 1.75rem; border-left: 5px solid var(--accent); margin-bottom: 1.5rem;">
+              <h3 style="font-size: 1.25rem; font-weight: 700; color: #065F46; margin-bottom: 0.5rem;">
+                🎉 Seat Request Accepted!
+              </h3>
+              <p style="color: var(--slate-600); margin-bottom: 1rem;">
+                Your booking for <strong>${req.seats_requested} seat(s)</strong> is confirmed. You can coordinate directly with the driver below:
+              </p>
+              <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1rem;">
+                <p><strong>Driver Name:</strong> ${ride.driver_name}</p>
+                <p><strong>Phone / WhatsApp:</strong> <a href="tel:${ride.driver_phone}">${ride.driver_phone || 'Available'}</a></p>
+                <p><strong>College:</strong> ${ride.driver_college || 'Student'}</p>
+              </div>
+              <button class="btn btn-danger btn-sm" id="btn-cancel-my-request" data-id="${req.id}">
+                Cancel Confirmed Seat
+              </button>
+            </div>
+          `;
+
+          // If ride is COMPLETED, allow rating
+          if (ride.status === "COMPLETED") {
+            statusBox += `
+              <div class="card" style="padding: 1.75rem;">
+                <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Rate Your Driver</h3>
+                <p style="font-size: 0.9rem; color: var(--slate-500); margin-bottom: 1rem;">How was your ride experience with ${ride.driver_name}?</p>
+                <form id="rating-form">
+                  <div class="form-group">
+                    <label class="form-label">Rating</label>
+                    <select id="rating-stars" class="form-select" required>
+                      <option value="5">⭐⭐⭐⭐⭐ (5 Stars - Excellent)</option>
+                      <option value="4">⭐⭐⭐⭐ (4 Stars - Good)</option>
+                      <option value="3">⭐⭐⭐ (3 Stars - Average)</option>
+                      <option value="2">⭐⭐ (2 Stars - Below Average)</option>
+                      <option value="1">⭐ (1 Star - Poor)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Review Comment</label>
+                    <textarea id="rating-review" class="form-textarea" rows="2" placeholder="Punctual, safe riding, comfortable carpool..."></textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Submit Rating</button>
+                </form>
+              </div>
+            `;
+          }
+        } else if (req.status === "REJECTED") {
+          statusBox = `
+            <div class="card" style="padding: 1.75rem; border-left: 5px solid var(--danger);">
+              <h3 style="font-size: 1.2rem; font-weight: 700; color: #991B1B; margin-bottom: 0.5rem;">
+                ❌ Request Declined
+              </h3>
+              <p style="color: var(--slate-600); margin-bottom: 1rem;">
+                The driver was unable to accept your seat request for this route.
+              </p>
+              <a href="rides.html" class="btn btn-primary btn-sm">Find Another Ride</a>
+            </div>
+          `;
+        } else if (req.status === "CANCELLED") {
+          statusBox = `
+            <div class="card" style="padding: 1.75rem;">
+              <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Booking Cancelled</h3>
+              <p style="color: var(--slate-600); margin-bottom: 1rem;">This seat request was cancelled.</p>
+              <a href="rides.html" class="btn btn-primary btn-sm">Search Other Rides</a>
+            </div>
+          `;
+        }
+
+        container.innerHTML = statusBox;
+
+        // Cancel request button
+        const cancelBtn = document.getElementById("btn-cancel-my-request");
+        if (cancelBtn) {
+          cancelBtn.addEventListener("click", async () => {
+            const confirmed = await UI.showConfirm({
+              title: "Cancel Your Seat Request?",
+              message: "Are you sure you want to cancel this booking?",
+              confirmText: "Yes, Cancel",
+              isDanger: true
+            });
+            if (confirmed) {
+              try {
+                const res = await API.patch(`/requests/${cancelBtn.dataset.id}/cancel`);
+                if (res.success) {
+                  UI.showToast("Your request was cancelled.", "info");
+                  loadRideDetails(ride.id);
+                }
+              } catch (e) {
+                UI.showToast(e.message || "Failed to cancel.", "error");
+              }
+            }
+          });
+        }
+
+        // Rating form submit
+        const ratingForm = document.getElementById("rating-form");
+        if (ratingForm) {
+          ratingForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const rating = document.getElementById("rating-stars").value;
+            const review = document.getElementById("rating-review").value.trim();
+
+            try {
+              const rRes = await API.post("/ratings", {
+                ride_id: ride.id,
+                reviewee_id: ride.driver_id,
+                rating,
+                review
+              });
+              if (rRes.success) {
+                UI.showToast("Thank you for your rating!", "success");
+                ratingForm.innerHTML = `<p style="color: #065F46; font-weight: 700;">✓ Your rating has been submitted.</p>`;
+              }
+            } catch (err) {
+              UI.showToast(err.message || "Failed to submit rating.", "error");
+            }
+          });
+        }
+
+      } else {
+        // No request sent yet: show booking form
+        if (ride.status !== "OPEN" || ride.available_seats <= 0) {
+          container.innerHTML = `
+            <div class="card" style="text-align: center; padding: 2rem;">
+              <p style="color: var(--slate-500); font-weight: 600;">This ride is currently ${ride.status.toLowerCase()} and cannot accept new seat requests.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="card" style="padding: 2rem;">
+            <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 0.5rem;">Request a Seat on this Ride</h3>
+            <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 1.5rem;">
+              The driver will receive an instant notification to confirm your seat.
+            </p>
+
+            <form id="passenger-request-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="req-seats">Seats Needed <span class="required">*</span></label>
+                  <input type="number" id="req-seats" class="form-input" min="1" max="${ride.available_seats}" value="1" required>
+                  <span class="form-hint">${ride.available_seats} seat(s) available</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="req-pickup">Your Preferred Pickup Location</label>
+                  <input type="text" id="req-pickup" class="form-input" placeholder="e.g. Uppal Metro Gate 1">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="req-notes">Note for Driver (Optional)</label>
+                <textarea id="req-notes" class="form-textarea" rows="2" placeholder="e.g. Carrying a backpack. Will be standing under the metro pillar."></textarea>
+              </div>
+
+              <button type="submit" id="btn-submit-request" class="btn btn-primary btn-lg btn-block" style="margin-top: 0.5rem;">
+                Send Seat Reservation Request
+              </button>
+            </form>
+          </div>
+        `;
+
+        document.getElementById("passenger-request-form").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById("btn-submit-request");
+          const seats_requested = parseInt(document.getElementById("req-seats").value);
+          const pickup_point = document.getElementById("req-pickup").value.trim();
+          const notes = document.getElementById("req-notes").value.trim();
+
+          btn.disabled = true;
+          btn.textContent = "Sending Request...";
+
+          try {
+            const res = await API.post("/requests", {
+              ride_id: ride.id,
+              seats_requested,
+              pickup_point,
+              notes
+            });
+            if (res.success) {
+              UI.showToast("Request submitted successfully!", "success");
+              loadRideDetails(ride.id);
+            }
+          } catch (err) {
+            UI.showToast(err.message || "Failed to submit request.", "error");
+            btn.disabled = false;
+            btn.textContent = "Send Seat Reservation Request";
+          }
+        });
+      }
+    }
+
+    // Report modal submission
+    document.getElementById("report-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const urlParams = new URLSearchParams(window.location.search);
+      const rideId = urlParams.get("id");
+      const reason = document.getElementById("report-reason").value;
+      const details = document.getElementById("report-details").value.trim();
+
+      try {
+        const res = await API.post("/admin/report", {
+          ride_id: rideId,
+          reason,
+          details
+        });
+        if (res.success) {
+          document.getElementById("report-modal").style.display = "none";
+          UI.showToast("Report submitted. Admins will review the listing.", "info");
+        }
+      } catch (err) {
+        UI.showToast(err.message || "Failed to submit report.", "error");
+      }
+    });
+  </script>
+</body>
+</html>

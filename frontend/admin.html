@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Console - CampusRide</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body style="background: var(--slate-100);">
+
+  <!-- Navigation Bar -->
+  <header class="site-nav" id="main-nav"></header>
+
+  <main class="container" style="padding-top: 2.5rem; padding-bottom: 4rem;">
+    <!-- Admin Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+          <span style="background: #7C3AED; color: white; padding: 0.2rem 0.6rem; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 700;">
+            ADMINISTRATOR
+          </span>
+          <h1 style="font-size: 2rem; font-weight: 800; color: var(--dark);">CampusRide Platform Operations</h1>
+        </div>
+        <p style="color: var(--slate-500); font-size: 0.95rem;">Monitor student activity, moderate ride listings, and manage reported issues.</p>
+      </div>
+
+      <div>
+        <button id="btn-refresh-admin" class="btn btn-secondary btn-sm">🔄 Refresh Data</button>
+      </div>
+    </div>
+
+    <!-- Platform Metrics Grid -->
+    <div class="stats-grid" id="admin-stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon primary">👥</div>
+        <div class="stat-details">
+          <span class="stat-number" id="adm-stat-users">...</span>
+          <span class="stat-label">Total Users</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon accent">🚗</div>
+        <div class="stat-details">
+          <span class="stat-number" id="adm-stat-rides">...</span>
+          <span class="stat-label">Total Rides</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon secondary">🎫</div>
+        <div class="stat-details">
+          <span class="stat-number" id="adm-stat-requests">...</span>
+          <span class="stat-label">Seat Requests</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon warning">🚩</div>
+        <div class="stat-details">
+          <span class="stat-number" id="adm-stat-reports">...</span>
+          <span class="stat-label">Pending Reports</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Tabs Navigation -->
+    <div class="tabs-nav" style="margin-top: 1.5rem;">
+      <button class="tab-btn active" id="adm-tab-users">👤 Users Registry</button>
+      <button class="tab-btn" id="adm-tab-rides">🚗 All Ride Listings</button>
+      <button class="tab-btn" id="adm-tab-reports">🚩 User Reports</button>
+    </div>
+
+    <!-- Tab 1: Users Registry -->
+    <div id="adm-pane-users" class="card" style="padding: 1.5rem; overflow-x: auto;">
+      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">Registered Campus Users</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--slate-200); color: var(--slate-500);">
+            <th style="padding: 0.75rem 0.5rem;">ID</th>
+            <th style="padding: 0.75rem 0.5rem;">Name</th>
+            <th style="padding: 0.75rem 0.5rem;">Email</th>
+            <th style="padding: 0.75rem 0.5rem;">Phone</th>
+            <th style="padding: 0.75rem 0.5rem;">College</th>
+            <th style="padding: 0.75rem 0.5rem;">Role</th>
+            <th style="padding: 0.75rem 0.5rem;">Offered / Booked</th>
+          </tr>
+        </thead>
+        <tbody id="adm-users-table-body">
+          <tr><td colspan="7" style="padding: 2rem; text-align: center;">Loading users...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tab 2: All Rides -->
+    <div id="adm-pane-rides" class="card" style="padding: 1.5rem; display: none; overflow-x: auto;">
+      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">All Platform Rides</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--slate-200); color: var(--slate-500);">
+            <th style="padding: 0.75rem 0.5rem;">ID</th>
+            <th style="padding: 0.75rem 0.5rem;">Route</th>
+            <th style="padding: 0.75rem 0.5rem;">Date & Time</th>
+            <th style="padding: 0.75rem 0.5rem;">Driver</th>
+            <th style="padding: 0.75rem 0.5rem;">Vehicle</th>
+            <th style="padding: 0.75rem 0.5rem;">Seats Left</th>
+            <th style="padding: 0.75rem 0.5rem;">Status</th>
+            <th style="padding: 0.75rem 0.5rem;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="adm-rides-table-body">
+          <tr><td colspan="8" style="padding: 2rem; text-align: center;">Loading rides...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tab 3: Reports -->
+    <div id="adm-pane-reports" class="card" style="padding: 1.5rem; display: none;">
+      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">Community Reports</h3>
+      <div id="adm-reports-list">
+        <p style="text-align: center; padding: 2rem; color: var(--slate-500);">Loading reports...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer" id="main-footer"></footer>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Guard: Admin authorization
+      if (!Auth.requireAdmin()) return;
+
+      UI.initNavbar("admin");
+      UI.initFooter();
+
+      // Tab switching
+      const tabUsers = document.getElementById("adm-tab-users");
+      const tabRides = document.getElementById("adm-tab-rides");
+      const tabReports = document.getElementById("adm-tab-reports");
+
+      const paneUsers = document.getElementById("adm-pane-users");
+      const paneRides = document.getElementById("adm-pane-rides");
+      const paneReports = document.getElementById("adm-pane-reports");
+
+      function switchTab(t) {
+        [tabUsers, tabRides, tabReports].forEach(b => b.classList.remove("active"));
+        [paneUsers, paneRides, paneReports].forEach(p => p.style.display = "none");
+
+        if (t === "rides") {
+          tabRides.classList.add("active");
+          paneRides.style.display = "block";
+          loadAdminRides();
+        } else if (t === "reports") {
+          tabReports.classList.add("active");
+          paneReports.style.display = "block";
+          loadAdminReports();
+        } else {
+          tabUsers.classList.add("active");
+          paneUsers.style.display = "block";
+          loadAdminUsers();
+        }
+      }
+
+      tabUsers.addEventListener("click", () => switchTab("users"));
+      tabRides.addEventListener("click", () => switchTab("rides"));
+      tabReports.addEventListener("click", () => switchTab("reports"));
+
+      document.getElementById("btn-refresh-admin").addEventListener("click", () => {
+        loadAdminStats();
+        switchTab("users");
+      });
+
+      // Initial loads
+      loadAdminStats();
+      loadAdminUsers();
+
+      // Stats
+      async function loadAdminStats() {
+        try {
+          const res = await API.get("/admin/stats");
+          if (res.success && res.stats) {
+            document.getElementById("adm-stat-users").textContent = res.stats.users.total_users || 0;
+            document.getElementById("adm-stat-rides").textContent = res.stats.rides.total_rides || 0;
+            document.getElementById("adm-stat-requests").textContent = res.stats.requests.total_requests || 0;
+            document.getElementById("adm-stat-reports").textContent = res.stats.pendingReports || 0;
+          }
+        } catch (e) {
+          console.error("Admin stats error:", e);
+        }
+      }
+
+      // Users
+      async function loadAdminUsers() {
+        const tbody = document.getElementById("adm-users-table-body");
+        try {
+          const res = await API.get("/admin/users");
+          if (res.success && res.users) {
+            tbody.innerHTML = res.users.map(u => `
+              <tr style="border-bottom: 1px solid var(--slate-100);">
+                <td style="padding: 0.75rem 0.5rem; font-weight: 700;">#${u.id}</td>
+                <td style="padding: 0.75rem 0.5rem; font-weight: 600;">${u.name}</td>
+                <td style="padding: 0.75rem 0.5rem; color: var(--slate-600);">${u.email}</td>
+                <td style="padding: 0.75rem 0.5rem;">${u.phone || '—'}</td>
+                <td style="padding: 0.75rem 0.5rem;">${u.college || '—'}</td>
+                <td style="padding: 0.75rem 0.5rem;">
+                  <span class="badge ${u.role === 'ADMIN' ? 'badge-car' : 'badge-neutral'}">${u.role}</span>
+                </td>
+                <td style="padding: 0.75rem 0.5rem; color: var(--slate-600);">
+                  ${u.rides_offered} offered / ${u.requests_made} booked
+                </td>
+              </tr>
+            `).join("");
+          }
+        } catch (e) {
+          tbody.innerHTML = `<tr><td colspan="7" style="color: var(--danger); text-align: center; padding: 2rem;">Error loading users.</td></tr>`;
+        }
+      }
+
+      // Rides
+      async function loadAdminRides() {
+        const tbody = document.getElementById("adm-rides-table-body");
+        try {
+          const res = await API.get("/admin/rides");
+          if (res.success && res.rides) {
+            tbody.innerHTML = res.rides.map(r => `
+              <tr style="border-bottom: 1px solid var(--slate-100);">
+                <td style="padding: 0.75rem 0.5rem; font-weight: 700;">#${r.id}</td>
+                <td style="padding: 0.75rem 0.5rem;">
+                  <strong>${r.source}</strong> ➔ <strong>${r.destination}</strong>
+                </td>
+                <td style="padding: 0.75rem 0.5rem; font-size: 0.85rem;">
+                  ${UI.formatDate(r.travel_date)} at ${UI.formatTime(r.departure_time)}
+                </td>
+                <td style="padding: 0.75rem 0.5rem;">${r.driver_name}</td>
+                <td style="padding: 0.75rem 0.5rem;">${UI.getVehicleBadge(r.vehicle_type)}</td>
+                <td style="padding: 0.75rem 0.5rem;">${r.available_seats} / ${r.total_seats}</td>
+                <td style="padding: 0.75rem 0.5rem;">${UI.getStatusBadge(r.status)}</td>
+                <td style="padding: 0.75rem 0.5rem;">
+                  <div style="display: flex; gap: 0.35rem;">
+                    <a href="ride-details.html?id=${r.id}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">View</a>
+                    ${r.status !== 'CANCELLED' ? `
+                      <button class="btn btn-danger btn-sm btn-adm-cancel-ride" data-id="${r.id}" style="font-size: 0.75rem;">Cancel</button>
+                    ` : ''}
+                  </div>
+                </td>
+              </tr>
+            `).join("");
+
+            document.querySelectorAll(".btn-adm-cancel-ride").forEach(b => {
+              b.addEventListener("click", async () => {
+                const confirmed = await UI.showConfirm({
+                  title: "Admin Cancel Ride?",
+                  message: "Cancel this ride and notify driver?",
+                  confirmText: "Cancel Ride",
+                  isDanger: true
+                });
+                if (confirmed) {
+                  try {
+                    const cRes = await API.delete(`/admin/rides/${b.dataset.id}`);
+                    if (cRes.success) {
+                      UI.showToast("Ride cancelled by admin.", "info");
+                      loadAdminRides();
+                      loadAdminStats();
+                    }
+                  } catch (e) {
+                    UI.showToast(e.message || "Failed.", "error");
+                  }
+                }
+              });
+            });
+          }
+        } catch (e) {
+          tbody.innerHTML = `<tr><td colspan="8" style="color: var(--danger); text-align: center; padding: 2rem;">Error loading rides.</td></tr>`;
+        }
+      }
+
+      // Reports
+      async function loadAdminReports() {
+        const container = document.getElementById("adm-reports-list");
+        try {
+          const res = await API.get("/admin/reports");
+          if (res.success && res.reports) {
+            if (res.reports.length === 0) {
+              container.innerHTML = `<p style="text-align: center; color: var(--slate-500); padding: 2rem;">No reports submitted yet.</p>`;
+              return;
+            }
+
+            container.innerHTML = `
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${res.reports.map(rp => `
+                  <div style="border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                      <div>
+                        <strong style="color: var(--danger); font-size: 1rem;">🚩 ${rp.reason}</strong>
+                        <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 0.2rem;">
+                          Reported by: ${rp.reporter_name} (${rp.reporter_email}) &bull; ${new Date(rp.created_at).toLocaleString()}
+                        </div>
+                      </div>
+                      ${UI.getStatusBadge(rp.status)}
+                    </div>
+
+                    ${rp.details ? `
+                      <p style="font-size: 0.9rem; color: var(--slate-700); background: var(--slate-50); padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); margin-bottom: 0.75rem;">
+                        "${rp.details}"
+                      </p>
+                    ` : ''}
+
+                    ${rp.ride_id ? `
+                      <div style="font-size: 0.85rem; color: var(--slate-600); margin-bottom: 0.75rem;">
+                        Associated Ride: #${rp.ride_id} (${rp.ride_source} ➔ ${rp.ride_destination})
+                        <a href="ride-details.html?id=${rp.ride_id}" target="_blank" style="margin-left: 0.5rem;">View Listing &rarr;</a>
+                      </div>
+                    ` : ''}
+
+                    ${rp.status === 'PENDING' ? `
+                      <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button class="btn btn-success btn-sm btn-resolve-report" data-id="${rp.id}">✓ Resolve</button>
+                        <button class="btn btn-secondary btn-sm btn-dismiss-report" data-id="${rp.id}">Dismiss</button>
+                      </div>
+                    ` : ''}
+                  </div>
+                `).join("")}
+              </div>
+            `;
+
+            document.querySelectorAll(".btn-resolve-report").forEach(b => {
+              b.addEventListener("click", async () => {
+                await API.patch(`/admin/reports/${b.dataset.id}`, { status: "RESOLVED" });
+                UI.showToast("Report marked as resolved.", "success");
+                loadAdminReports();
+                loadAdminStats();
+              });
+            });
+
+            document.querySelectorAll(".btn-dismiss-report").forEach(b => {
+              b.addEventListener("click", async () => {
+                await API.patch(`/admin/reports/${b.dataset.id}`, { status: "DISMISSED" });
+                UI.showToast("Report dismissed.", "info");
+                loadAdminReports();
+                loadAdminStats();
+              });
+            });
+          }
+        } catch (e) {
+          container.innerHTML = `<p style="color: var(--danger);">Failed to load reports.</p>`;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
