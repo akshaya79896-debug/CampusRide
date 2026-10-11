@@ -194,20 +194,6 @@ The backend automatically serves the complete frontend application:
 
 ---
 
-## 🔑 Demo Login Credentials
-
-For quick evaluation and testing:
-
-| Role | Email | Password |
-|---|---|---|
-| **Platform Administrator** | `admin@campusride.com` | `Admin@123` |
-| **Student 1 (Driver)** | `akshaya@gmail.com` | (Your existing password) |
-| **Student 2 (Passenger)** | `rahul@gmail.com` | (Your existing password) |
-| **Student 3** | `teststudent@gmail.com` | `Password@123` |
-
-*(You can also click the quick demo autofill buttons on `login.html` or register a new student account at any time).*
-
----
 
 ## 📮 API Endpoints & Postman Testing Guide
 
